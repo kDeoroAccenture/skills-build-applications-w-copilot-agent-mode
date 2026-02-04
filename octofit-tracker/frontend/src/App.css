@@ -1,0 +1,30 @@
+/* App-wide styles for OctoFit Tracker */
+body {
+  background-color: #f8f9fa;
+}
+.container {
+  max-width: 1100px;
+}
+.navbar-brand {
+  font-weight: 600;
+}
+.card-table {
+  margin-top: 1rem;
+}
+.table tbody tr td {
+  vertical-align: middle;
+}
+.btn-refresh {
+  margin-left: 0.5rem;
+}
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.small-muted {
+  color: #6c757d;
+}
+@media (max-width: 576px) {
+  .container { padding-left: 0.75rem; padding-right: 0.75rem; }
+}

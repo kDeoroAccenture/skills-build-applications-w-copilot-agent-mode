@@ -13,39 +13,57 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import os
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-
-import os
-from . import views
-
-
-router = DefaultRouter()
-router.register(r'users', views.UserViewSet, basename='user')
-router.register(r'teams', views.TeamViewSet, basename='team')
-router.register(r'activities', views.ActivityViewSet, basename='activity')
-router.register(r'leaderboard', views.LeaderboardViewSet, basename='leaderboard')
-router.register(r'workouts', views.WorkoutViewSet, basename='workout')
-
-# Patch api_root to use CODESPACE_NAME for endpoint URLs
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
+
+from api.views import (
+    UserViewSet, UserProfileViewSet, TeamViewSet,
+    ActivityViewSet, WorkoutViewSet, LeaderboardViewSet
+)
+
+# Create router and register viewsets
+router = DefaultRouter()
+router.register(r'users', UserViewSet, basename='user')
+router.register(r'profiles', UserProfileViewSet, basename='profile')
+router.register(r'teams', TeamViewSet, basename='team')
+router.register(r'activities', ActivityViewSet, basename='activity')
+router.register(r'workouts', WorkoutViewSet, basename='workout')
+router.register(r'leaderboard', LeaderboardViewSet, basename='leaderboard')
+
 
 @api_view(['GET'])
-def api_root(request, format=None):
-    codespace_name = os.environ.get('CODESPACE_NAME')
-    base_url = f"https://{codespace_name}-8000.app.github.dev/api" if codespace_name else request.build_absolute_uri('/api')[:-4]
+def api_root(request):
+    """API root endpoint"""
+    # Get the base URL from the request to handle both localhost and codespace
+    protocol = 'https' if request.is_secure() else 'http'
+    host = request.get_host()
+    base_url = f"{protocol}://{host}"
+    
     return Response({
-        'users': f"{base_url}/users/",
-        'teams': f"{base_url}/teams/",
-        'activities': f"{base_url}/activities/",
-        'leaderboard': f"{base_url}/leaderboard/",
-        'workouts': f"{base_url}/workouts/",
+        'users': f"{base_url}/api/users/",
+        'profiles': f"{base_url}/api/profiles/",
+        'teams': f"{base_url}/api/teams/",
+        'activities': f"{base_url}/api/activities/",
+        'workouts': f"{base_url}/api/workouts/",
+        'leaderboard': f"{base_url}/api/leaderboard/",
     })
 
+
+# Get codespace name for URL configuration
+codespace_name = os.environ.get('CODESPACE_NAME')
+if codespace_name:
+    base_url = f"https://{codespace_name}-8000.app.github.dev"
+else:
+    base_url = "http://localhost:8000"
+
 urlpatterns = [
+    path('', api_root, name='api-root'),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('', api_root, name='api-root'),
+    path('api/auth/', include('dj_rest_auth.urls')),
 ]
